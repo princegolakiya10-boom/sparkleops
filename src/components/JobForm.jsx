@@ -1,25 +1,54 @@
 import React, { useState } from 'react';
 import { Button, Input, Textarea, SectionTitle, Spinner } from './UI';
-import { todayStr } from '../lib/utils';
+import { todayStr, calcEndTime, fmtTime } from '../lib/utils';
 import styles from './JobForm.module.css';
 
-const EMPTY = { name: '', mob: '', addr: '', notes: '', next: todayStr(), freq: 'weekly' };
+const DURATION_OPTIONS = [
+  { value: 0.5, label: '30 min' },
+  { value: 1,   label: '1 hr' },
+  { value: 1.5, label: '1.5 hrs' },
+  { value: 2,   label: '2 hrs' },
+  { value: 2.5, label: '2.5 hrs' },
+  { value: 3,   label: '3 hrs' },
+  { value: 3.5, label: '3.5 hrs' },
+  { value: 4,   label: '4 hrs' },
+  { value: 5,   label: '5 hrs' },
+  { value: 6,   label: '6 hrs' },
+  { value: 7,   label: '7 hrs' },
+  { value: 8,   label: '8 hrs' },
+];
+
+const EMPTY = {
+  name: '', mob: '', addr: '', notes: '',
+  next: todayStr(), freq: 'weekly',
+  startTime: '08:00', duration: 2,
+};
 
 export default function JobForm({ initial, onSave, onCancel, loading }) {
   const [form, setForm] = useState(initial ? {
-    name: initial.name || '', mob: initial.mob || '', addr: initial.addr || '',
-    notes: initial.notes || '', next: initial.next || todayStr(), freq: initial.freq || 'weekly',
+    name:      initial.name      || '',
+    mob:       initial.mob       || '',
+    addr:      initial.addr      || '',
+    notes:     initial.notes     || '',
+    next:      initial.next      || todayStr(),
+    freq:      initial.freq      || 'weekly',
+    startTime: initial.startTime || '08:00',
+    duration:  initial.duration  || 2,
   } : EMPTY);
   const [errors, setErrors] = useState({});
 
   const set = (k, v) => { setForm(f => ({ ...f, [k]: v })); setErrors(e => ({ ...e, [k]: '' })); };
 
+  const endTime = calcEndTime(form.startTime, form.duration);
+
   const validate = () => {
     const e = {};
-    if (!form.name.trim())  e.name = 'Customer name is required.';
-    if (!form.mob.trim())   e.mob  = 'Mobile number is required.';
-    if (!form.addr.trim())  e.addr = 'Address is required.';
-    if (!form.next)         e.next = 'Date is required.';
+    if (!form.name.trim()) e.name = 'Customer name is required.';
+    if (!form.mob.trim())  e.mob  = 'Mobile number is required.';
+    if (!form.addr.trim()) e.addr = 'Address is required.';
+    if (!form.next)        e.next = 'Date is required.';
+    if (!form.startTime)   e.startTime = 'Start time is required.';
+    if (!form.duration)    e.duration  = 'Duration is required.';
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -27,7 +56,7 @@ export default function JobForm({ initial, onSave, onCancel, loading }) {
   const submit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
-    await onSave(form);
+    await onSave({ ...form, duration: Number(form.duration) });
   };
 
   return (
@@ -52,17 +81,51 @@ export default function JobForm({ initial, onSave, onCancel, loading }) {
       </div>
 
       <SectionTitle>Schedule</SectionTitle>
+
       <div className={styles.freqGroup}>
         <button type="button"
           className={`${styles.freqOpt} ${form.freq === 'weekly' ? styles.freqOn : ''}`}
-          onClick={() => set('freq', 'weekly')}>
-          Weekly
-        </button>
+          onClick={() => set('freq', 'weekly')}>Weekly</button>
         <button type="button"
           className={`${styles.freqOpt} ${form.freq === 'fortnightly' ? styles.freqOn : ''}`}
-          onClick={() => set('freq', 'fortnightly')}>
-          Fortnightly
-        </button>
+          onClick={() => set('freq', 'fortnightly')}>Fortnightly</button>
+      </div>
+
+      <div className={styles.row3} style={{ marginTop: 14 }}>
+        {/* Start time */}
+        <div className={styles.timeField}>
+          <label className={styles.fieldLabel} htmlFor="startTime">Start time *</label>
+          <input
+            id="startTime" type="time" value={form.startTime}
+            onChange={e => set('startTime', e.target.value)}
+            className={`${styles.timeInput} ${errors.startTime ? styles.inputErr : ''}`}
+          />
+          {errors.startTime && <span className={styles.fieldErr}>{errors.startTime}</span>}
+        </div>
+
+        {/* Duration */}
+        <div className={styles.timeField}>
+          <label className={styles.fieldLabel} htmlFor="duration">Duration *</label>
+          <select
+            id="duration" value={form.duration}
+            onChange={e => set('duration', parseFloat(e.target.value))}
+            className={`${styles.timeInput} ${errors.duration ? styles.inputErr : ''}`}
+          >
+            {DURATION_OPTIONS.map(o => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </select>
+          {errors.duration && <span className={styles.fieldErr}>{errors.duration}</span>}
+        </div>
+
+        {/* Auto-calculated end time */}
+        <div className={styles.timeField}>
+          <label className={styles.fieldLabel}>End time</label>
+          <div className={styles.endTimeDisplay}>
+            {endTime ? fmtTime(endTime) : '—'}
+          </div>
+          <span className={styles.endTimeHint}>auto-calculated</span>
+        </div>
       </div>
 
       <SectionTitle>Notes</SectionTitle>

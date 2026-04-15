@@ -53,3 +53,35 @@ export function initials(name = '') {
 export function uid() {
   return Math.random().toString(36).slice(2, 10);
 }
+
+// ── Time helpers ─────────────────────────────────────────────────────────────
+
+/** Calculate end time string given a start time "HH:MM" and duration in hours (can be decimal) */
+export function calcEndTime(startTime, durationHours) {
+  if (!startTime || !durationHours) return '';
+  const [h, m] = startTime.split(':').map(Number);
+  const totalMins = h * 60 + m + Math.round(durationHours * 60);
+  const endH = Math.floor(totalMins / 60) % 24;
+  const endM = totalMins % 60;
+  return `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
+}
+
+/** Format "HH:MM" to "8:30 AM" style */
+export function fmtTime(t) {
+  if (!t) return '';
+  const [h, m] = t.split(':').map(Number);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const hour = h % 12 || 12;
+  return `${hour}:${String(m).padStart(2, '0')} ${ampm}`;
+}
+
+/** Format a duration number to a human label */
+export function fmtDuration(hours) {
+  if (!hours) return '';
+  if (hours === 1) return '1 hr';
+  if (Number.isInteger(hours)) return `${hours} hrs`;
+  const whole = Math.floor(hours);
+  const mins = Math.round((hours - whole) * 60);
+  if (whole === 0) return `${mins} min`;
+  return `${whole} hr ${mins} min`;
+}

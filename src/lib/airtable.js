@@ -1,20 +1,18 @@
 // ─────────────────────────────────────────────────────────────────────────────
-//  lib/airtable.js  — All Airtable API calls for SparkleOps
-//
-//  Airtable Base needs TWO tables:
+//  lib/airtable.js
 //
 //  Table: Users
-//    Fields: Id (Single line), Name (Single line), Email (Single line),
-//            Password (Single line), CreatedAt (Single line)
+//    Id, Name, Email, Password, CreatedAt — all Single line text
 //
 //  Table: Jobs
-//    Fields: Id (Single line), UserId (Single line),
-//            CustomerName (Single line), Mobile (Single line),
-//            Address (Single line), Notes (Long text),
-//            NextDate (Date — ISO format), Frequency (Single select: weekly | fortnightly),
-//            CreatedAt (Single line)
+//    Id, UserId, CustomerName, Mobile, Address, CreatedAt — Single line text
+//    Notes        — Long text
+//    NextDate     — Date (ISO format)
+//    Frequency    — Single select: weekly | fortnightly
+//    StartTime    — Single line text  (e.g. "08:30")   ← NEW
+//    Duration     — Number (decimal hours, e.g. 2.5)   ← NEW
 //
-//  All job objects in the app use: { id, _recId, userId, name, mob, addr, notes, next, freq }
+//  App job shape: { id, _recId, userId, name, mob, addr, notes, next, freq, startTime, duration }
 // ─────────────────────────────────────────────────────────────────────────────
 
 const BASE  = process.env.REACT_APP_AIRTABLE_BASE_ID;
@@ -48,8 +46,6 @@ async function fetchAll(table, qs = '') {
   return records;
 }
 
-// ── Shape mappers ────────────────────────────────────────────────────────────
-
 function toUser(rec) {
   return {
     _recId: rec.id,
@@ -62,19 +58,21 @@ function toUser(rec) {
 
 function toJob(rec) {
   return {
-    _recId: rec.id,
-    id:     rec.fields.Id           || rec.id,
-    userId: rec.fields.UserId       || '',
-    name:   rec.fields.CustomerName || '',
-    mob:    rec.fields.Mobile       || '',
-    addr:   rec.fields.Address      || '',
-    notes:  rec.fields.Notes        || '',
-    next:   rec.fields.NextDate     || '',
-    freq:   rec.fields.Frequency    || 'weekly',
+    _recId:    rec.id,
+    id:        rec.fields.Id           || rec.id,
+    userId:    rec.fields.UserId       || '',
+    name:      rec.fields.CustomerName || '',
+    mob:       rec.fields.Mobile       || '',
+    addr:      rec.fields.Address      || '',
+    notes:     rec.fields.Notes        || '',
+    next:      rec.fields.NextDate     || '',
+    freq:      rec.fields.Frequency    || 'weekly',
+    startTime: rec.fields.StartTime    || '',
+    duration:  rec.fields.Duration     || 0,
   };
 }
 
-// ── Users ────────────────────────────────────────────────────────────────────
+// ── Users ─────────────────────────────────────────────────────────────────────
 
 export async function getUserByEmail(email) {
   const enc = encodeURIComponent(`{Email}="${email}"`);
@@ -93,7 +91,7 @@ export async function createUser({ id, name, email, password }) {
   return toUser(data.records[0]);
 }
 
-// ── Jobs ─────────────────────────────────────────────────────────────────────
+// ── Jobs ──────────────────────────────────────────────────────────────────────
 
 export async function getJobsByUser(userId) {
   const enc = encodeURIComponent(`{UserId}="${userId}"`);
@@ -109,6 +107,8 @@ export async function createJob(job) {
         Id: job.id, UserId: job.userId,
         CustomerName: job.name, Mobile: job.mob, Address: job.addr,
         Notes: job.notes, NextDate: job.next, Frequency: job.freq,
+        StartTime: job.startTime || '',
+        Duration:  job.duration  || 0,
         CreatedAt: new Date().toISOString(),
       }}],
     }),
@@ -122,6 +122,8 @@ export async function updateJob(job) {
     body: JSON.stringify({ fields: {
       CustomerName: job.name, Mobile: job.mob, Address: job.addr,
       Notes: job.notes, NextDate: job.next, Frequency: job.freq,
+      StartTime: job.startTime || '',
+      Duration:  job.duration  || 0,
     }}),
   });
   return toJob(data);
