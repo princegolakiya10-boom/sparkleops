@@ -1,0 +1,21 @@
+.hero { display: flex; align-items: center; gap: 14px; margin-bottom: 4px; }
+.heroName { font-size: 18px; font-weight: 600; color: var(--gray-900); letter-spacing: -0.3px; }
+.heroSub { font-size: 13px; color: var(--gray-400); margin-top: 2px; }
+.heroBadge { margin-left: auto; }
+.dl { display: grid; grid-template-columns: 110px 1fr; gap: 7px 16px; font-size: 13px; margin-bottom: 4px; }
+.dl dt { color: var(--gray-400); font-weight: 500; }
+.dl dd { color: var(--gray-900); }
+.link { color: var(--blue-600); }
+.link:hover { text-decoration: underline; }
+.schedule { display: flex; gap: 8px; flex-wrap: wrap; }
+.schChip {
+  padding: 5px 12px; background: var(--gray-50); border: 1px solid var(--gray-100);
+  border-radius: var(--radius-full); font-size: 12px; color: var(--gray-600);
+}
+.schFirst { background: var(--blue-50); border-color: var(--blue-200); color: var(--blue-800); font-weight: 500; }
+.notes {
+  background: var(--gray-50); border: 1px solid var(--gray-100); border-radius: var(--radius-md);
+  padding: 14px; font-size: 13px; color: var(--gray-600); line-height: 1.75;
+  max-height: 240px; overflow-y: auto; white-space: pre-wrap;
+}
+.footer { display: flex; gap: 8px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--gray-100); flex-wrap: wrap; }

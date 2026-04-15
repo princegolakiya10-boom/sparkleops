@@ -1,0 +1,29 @@
+.card {
+  background: var(--gray-100);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+}
+.label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--gray-500);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+.value {
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -1px;
+  line-height: 1;
+  margin-bottom: 3px;
+}
+.sub {
+  font-size: 11px;
+  color: var(--gray-400);
+}
+.gray   { color: var(--gray-700); }
+.blue   { color: var(--blue-600); }
+.green  { color: var(--green-600); }
+.amber  { color: var(--amber-600); }
+.red    { color: var(--red-600); }

@@ -1,0 +1,15 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.1px;
+}
+.gray   { background: var(--gray-100);   color: var(--gray-600); }
+.blue   { background: var(--blue-50);    color: var(--blue-800); }
+.green  { background: var(--green-50);   color: var(--green-800); }
+.amber  { background: var(--amber-50);   color: var(--amber-800); }
+.red    { background: var(--red-50);     color: var(--red-800); }
+.purple { background: var(--purple-50);  color: var(--purple-800); }
