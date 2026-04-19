@@ -21,6 +21,13 @@
   cursor: pointer; font-family: inherit; transition: background 0.12s;
 }
 .iconBtn:hover { background: var(--gray-50); color: var(--gray-800); }
+.invoiceBtn {
+  padding: 6px 14px; border: 1px solid var(--blue-500); border-radius: 6px;
+  background: var(--blue-600); color: #fff; font-size: 12px; font-weight: 600;
+  cursor: pointer; font-family: inherit; transition: background 0.12s;
+  white-space: nowrap;
+}
+.invoiceBtn:hover { background: var(--blue-700); }
 .userPill {
   display: flex; align-items: center; gap: 8px;
   padding: 5px 12px; border: 1px solid var(--gray-200); border-radius: 20px;

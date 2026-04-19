@@ -105,6 +105,185 @@ ${dayJobs.map((j, i) => {
   setTimeout(() => win.print(), 400);
 }
 
+export function printWeeklyInvoice(jobs, userName) {
+  const RATE  = 32.38;
+  const EXTRA = 26;
+
+  // Current calendar week: Monday → Sunday
+  const today      = new Date();
+  const dow        = today.getDay(); // 0 Sun … 6 Sat
+  const toMonday   = dow === 0 ? -6 : 1 - dow;
+  const monday     = new Date(today); monday.setDate(today.getDate() + toMonday);
+  const sunday     = new Date(monday); sunday.setDate(monday.getDate() + 6);
+  const localStr   = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const weekStart  = localStr(monday);
+  const weekEnd    = localStr(sunday);
+
+  const weekJobs = jobs
+    .filter(j => j.next >= weekStart && j.next <= weekEnd)
+    .sort((a, b) => a.next.localeCompare(b.next) || (a.startTime||'').localeCompare(b.startTime||''));
+
+  const rows = weekJobs.map(j => ({
+    ...j,
+    amount: (j.duration || 0) * RATE + EXTRA,
+  }));
+  const subtotal = rows.reduce((s, r) => s + r.amount, 0);
+  const gst      = subtotal * 0.1;
+  const total    = subtotal + gst;
+
+  const invoiceNo   = `INV-${todayStr().replace(/-/g,'')}`;
+  const issuedDate  = new Date().toLocaleDateString('en-AU', { day:'numeric', month:'long', year:'numeric' });
+  const periodLabel = `${monday.toLocaleDateString('en-AU',{day:'numeric',month:'short'})} – ${sunday.toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'})}`;
+
+  const fmt2 = (n) => n.toFixed(2);
+
+  const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"/>
+<title>Invoice ${invoiceNo}</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 13px; color: #1a1a1a; background: #fff; padding: 40px; }
+  /* Header */
+  .page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 36px; }
+  .brand { font-size: 26px; font-weight: 800; color: #2563eb; letter-spacing: -0.5px; }
+  .brand-sub { font-size: 12px; color: #6b7280; margin-top: 3px; }
+  .inv-meta { text-align: right; }
+  .inv-num { font-size: 22px; font-weight: 700; color: #111827; }
+  .inv-label { font-size: 11px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  /* From / To */
+  .parties { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 10px; padding: 20px 24px; }
+  .party-label { font-size: 10px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 6px; }
+  .party-name { font-size: 15px; font-weight: 700; color: #111827; margin-bottom: 2px; }
+  .party-detail { font-size: 12px; color: #6b7280; }
+  /* Details strip */
+  .details-strip { display: flex; gap: 0; border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden; margin-bottom: 28px; }
+  .detail-cell { flex: 1; padding: 14px 18px; border-right: 1px solid #e5e7eb; }
+  .detail-cell:last-child { border-right: none; }
+  .detail-cell-label { font-size: 10px; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; }
+  .detail-cell-val { font-size: 14px; font-weight: 600; color: #111827; }
+  /* Table */
+  table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+  thead tr { background: #1e40af; color: #fff; }
+  thead th { padding: 11px 14px; font-size: 11px; font-weight: 600; text-align: left; letter-spacing: 0.4px; }
+  thead th:last-child { text-align: right; }
+  tbody tr { border-bottom: 1px solid #f3f4f6; }
+  tbody tr:nth-child(even) { background: #f9fafb; }
+  tbody td { padding: 11px 14px; font-size: 13px; color: #374151; vertical-align: middle; }
+  tbody td:last-child { text-align: right; font-weight: 600; color: #111827; }
+  .row-num { color: #9ca3af; font-size: 12px; }
+  /* Totals */
+  .totals { margin-left: auto; width: 280px; }
+  .totals-row { display: flex; justify-content: space-between; padding: 7px 0; font-size: 13px; border-bottom: 1px solid #f3f4f6; }
+  .totals-row:last-child { border-bottom: none; }
+  .totals-label { color: #6b7280; }
+  .totals-val { font-weight: 600; color: #111827; }
+  .totals-total { background: #1e40af; color: #fff; border-radius: 8px; padding: 12px 16px; display: flex; justify-content: space-between; margin-top: 10px; font-size: 15px; font-weight: 700; }
+  /* Footer */
+  .footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid #e5e7eb; display: flex; justify-content: space-between; font-size: 11px; color: #9ca3af; }
+  .empty { text-align: center; padding: 40px; color: #9ca3af; font-size: 14px; }
+  @media print { body { padding: 24px; } }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <div>
+    <div class="brand">SparkleOps</div>
+    <div class="brand-sub">Cleaning Services</div>
+  </div>
+  <div class="inv-meta">
+    <div class="inv-label">Invoice</div>
+    <div class="inv-num">${invoiceNo}</div>
+  </div>
+</div>
+
+<div class="parties">
+  <div>
+    <div class="party-label">From</div>
+    <div class="party-name">${userName || 'SparkleOps Operator'}</div>
+    <div class="party-detail">Cleaning Services</div>
+  </div>
+  <div>
+    <div class="party-label">Invoice details</div>
+    <div class="party-detail" style="margin-bottom:3px"><strong>Issued:</strong> ${issuedDate}</div>
+    <div class="party-detail"><strong>Period:</strong> ${periodLabel}</div>
+  </div>
+</div>
+
+<div class="details-strip">
+  <div class="detail-cell">
+    <div class="detail-cell-label">Invoice No.</div>
+    <div class="detail-cell-val">${invoiceNo}</div>
+  </div>
+  <div class="detail-cell">
+    <div class="detail-cell-label">Period</div>
+    <div class="detail-cell-val">${periodLabel}</div>
+  </div>
+  <div class="detail-cell">
+    <div class="detail-cell-label">Jobs</div>
+    <div class="detail-cell-val">${rows.length}</div>
+  </div>
+  <div class="detail-cell">
+    <div class="detail-cell-label">Total (inc. GST)</div>
+    <div class="detail-cell-val" style="color:#1e40af">$${fmt2(total)}</div>
+  </div>
+</div>
+
+${rows.length === 0
+  ? '<div class="empty">No jobs found for this week.</div>'
+  : `<table>
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>Customer</th>
+      <th>Date of Cleaning</th>
+      <th>Service</th>
+      <th>Amount (AUD)</th>
+    </tr>
+  </thead>
+  <tbody>
+    ${rows.map((r, i) => `
+    <tr>
+      <td class="row-num">${i + 1}</td>
+      <td><strong>${r.name}</strong></td>
+      <td>${fmtLong(r.next)}</td>
+      <td>Cleaning service</td>
+      <td>$${fmt2(r.amount)}</td>
+    </tr>`).join('')}
+  </tbody>
+</table>
+
+<div class="totals">
+  <div class="totals-row">
+    <span class="totals-label">Subtotal</span>
+    <span class="totals-val">$${fmt2(subtotal)}</span>
+  </div>
+  <div class="totals-row">
+    <span class="totals-label">GST (10%)</span>
+    <span class="totals-val">$${fmt2(gst)}</span>
+  </div>
+  <div class="totals-total">
+    <span>Total Due (AUD)</span>
+    <span>$${fmt2(total)}</span>
+  </div>
+</div>`}
+
+<div class="footer">
+  <span>SparkleOps — ${userName || ''}</span>
+  <span>Generated ${new Date().toLocaleString('en-AU')}</span>
+</div>
+
+</body>
+</html>`;
+
+  const win = window.open('', '_blank');
+  win.document.write(html);
+  win.document.close();
+  setTimeout(() => win.print(), 400);
+}
+
 export function exportJobsCSV(jobs) {
   const headers = ['Customer', 'Mobile', 'Address', 'Frequency', 'Next Date', 'Start Time', 'Duration (hrs)', 'Notes'];
   const esc = (s) => `"${String(s || '').replace(/"/g, '""')}"`;

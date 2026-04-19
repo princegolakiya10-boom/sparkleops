@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useAuth } from '../lib/AuthContext';
 import { useJobs } from '../hooks/useJobs';
 import { todayStr, tomorrowStr, weekEndStr } from '../lib/utils';
-import { printDailyRunSheet, exportJobsCSV } from '../lib/print';
+import { printDailyRunSheet, exportJobsCSV, printWeeklyInvoice } from '../lib/print';
 import { StatCard, Button, Modal, EmptyState, Spinner } from '../components/UI';
 import JobCard from '../components/JobCard';
 import JobDetail from '../components/JobDetail';
@@ -108,6 +108,9 @@ export default function DashboardPage() {
           </button>
           <button className={styles.iconBtn} onClick={() => handlePrint(null)} title="Print today's run sheet">
             🖨 Run sheet
+          </button>
+          <button className={styles.invoiceBtn} onClick={() => printWeeklyInvoice(jobs, user?.name)} title="Generate weekly invoice">
+            Invoice
           </button>
           <div className={styles.userPill}>
             <div className={styles.userAvatar}>{initials(user?.name || '')}</div>
