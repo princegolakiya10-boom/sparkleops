@@ -26,9 +26,9 @@
   display: flex; align-items: center; gap: 0;
   background: var(--blue-50); border: 1px solid var(--blue-100);
   border-radius: var(--radius-lg); padding: 14px 18px;
-  margin: 4px 0 16px;
+  margin: 4px 0 16px; min-width: 0; overflow: hidden;
 }
-.timeBlockStart, .timeBlockEnd { text-align: center; flex-shrink: 0; min-width: 64px; }
+.timeBlockStart, .timeBlockEnd { text-align: center; flex-shrink: 0; min-width: 56px; }
 .timeBlockLabel { font-size: 10px; font-weight: 600; color: var(--blue-600); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
 .timeBlockVal { font-size: 18px; font-weight: 600; color: var(--blue-800); letter-spacing: -0.3px; }
 .timeBlockBar { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 0 12px; }
