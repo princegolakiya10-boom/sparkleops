@@ -1,11 +1,14 @@
-export const todayStr    = () => new Date().toISOString().slice(0, 10);
+export const todayStr = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
 export const tomorrowStr = () => addDays(todayStr(), 1);
 export const weekEndStr  = () => addDays(todayStr(), 7);
 
 export function addDays(dateStr, n) {
   const d = new Date(dateStr + 'T00:00:00');
   d.setDate(d.getDate() + n);
-  return d.toISOString().slice(0, 10);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
 export function fmtLong(dateStr) {
